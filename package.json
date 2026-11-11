@@ -1,0 +1,12 @@
+{
+  "name": "junta", "private": true, "version": "0.1.0",
+  "packageManager": "pnpm@10.6.5", "engines": {"node": ">=22.14.0"},
+  "scripts": {
+    "dev": "turbo dev", "build": "turbo build", "lint": "eslint .", "typecheck": "turbo typecheck",
+    "test": "pnpm --filter @junta/validation test && pnpm --filter @junta/api test",
+    "test:e2e": "playwright test", "format": "prettier --write .",
+    "db:generate": "pnpm --filter @junta/api db:generate", "db:migrate": "pnpm --filter @junta/api db:migrate",
+    "db:seed": "pnpm --filter @junta/api db:seed", "db:reset": "pnpm --filter @junta/api db:reset"
+  },
+  "devDependencies": {"@eslint/js": "^9.39.0", "eslint": "^9.39.0", "typescript-eslint": "^8.46.0", "eslint-plugin-react-hooks": "^7.0.0", "typescript": "~5.9.3", "@types/node": "^22.19.0", "prettier": "^3.6.2", "turbo": "^2.6.0", "tsx": "^4.20.6", "@playwright/test": "^1.56.1", "dotenv-cli": "^10.0.0"}
+}
