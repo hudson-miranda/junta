@@ -19,7 +19,7 @@ Revisão somente leitura por agente independente, base `2546093`, implementaçã
 - Repetição de push externo: entrega pelo menos uma vez documentada; a caixa de entrada é idempotente. Escala de múltiplos workers requer validação de carga antes de ampliar a configuração atual.
 - Push desabilitado, campanhas além do cadastro e alertas para intenções posteriores a ofertas existentes: o beta garante a jornada oferta publicada após intenção. Push externo permanece desabilitado sem credenciais. Campanhas registram metas; automações adicionais não são anunciadas como prontas.
 - Desaprovação de loja/desativação de catálogo: publicação já exige aprovação; não há mutation administrativa de remoção de aprovação neste beta.
-- Paginação ampla, navegação de conta nos portais e atualização visual das preferências: limitações de escala/polimento registradas; portais operacionais são destinados a usuários provisionados.
+- Navegação de conta nos portais: os dois portais receberam a rota compartilhada de configurações, com regressão na jornada administrativa. Paginação ampla e atualização visual das preferências permanecem limites de escala/polimento do beta; portais operacionais são destinados a usuários provisionados.
 - Build nativo, entrega push/OAuth/Sentry e universal links: exigem conta, chaves, aparelho e domínio verificável; exportação não é teste em aparelho.
 - CI hospedado: jobs bloqueados por faturamento da conta GitHub antes de iniciar. Não foi tratado como falha de teste nem como CI aprovado.
 - Vercel e runtime Docker: resultado consta nas verificações de entrega; o revisor não afirmou sucesso externo.

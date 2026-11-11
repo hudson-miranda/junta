@@ -13,7 +13,7 @@ Monólito modular, com clientes independentes e contratos de entrada gerados a p
 
 Criação/cancelamento de intenção usa advisory lock por usuário dentro da transação e índice parcial por usuário/variante ativa. Criação atualiza pool e outbox na mesma transação. Repetir a mesma chave com o mesmo corpo retorna o recurso anterior; reutilizar com outro corpo é conflito.
 
-Refresh tokens são aleatórios e somente seus hashes SHA-256 são persistidos. Cada rotação revoga o anterior; replay revoga a família inteira, incluindo access tokens associados. Senhas usam Argon2id. O cadastro público não aceita papel de acesso. Login social valida assinatura, emissor, audiência e email verificado, sem vinculação automática de contas com o mesmo email.
+Refresh tokens são aleatórios e somente seus hashes SHA-256 são persistidos. Cada rotação consome o refresh anterior (`rotatedAt`), preservando access tokens por até 15 minutos. Replay revoga a família inteira, incluindo seus access tokens. Logout e reset revogam imediatamente as sessões. Senhas usam Argon2id. O cadastro público não aceita papel de acesso. Login social valida assinatura, emissor, audiência e email verificado, sem vinculação automática de contas com o mesmo email.
 
 Ofertas exigem loja aprovada e membership verificada. Lojistas recebem demanda agregada; não recebem identidades ou orçamentos individuais. Toda publicação e alteração administrativa escreve auditoria. URLs de compra exigem HTTPS. Clique só é registrado para oferta vigente e aprovada.
 

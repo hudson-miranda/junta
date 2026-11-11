@@ -33,7 +33,7 @@ Ambientes separados exigem banco, Redis, chaves de assinatura, origins e OAuth d
 
 Banco gerenciado: criar usuário de aplicação sem SUPERUSER, sem CREATEDB/CREATEROLE. Criar extensão `pg_trgm` com conta de migration; liberar DDL apenas ao job de migration. Aplicação recebe apenas SELECT/INSERT/UPDATE/DELETE e acesso necessário às sequences. Redis deve ter TLS e credenciais fora do Docker local.
 
-Três projetos Vercel, `rootDirectory` respectivamente `apps/web`, `apps/admin`, `apps/merchant`. `installCommand=pnpm install --frozen-lockfile`, build no respectivo `vercel.json`. Configure `NEXT_PUBLIC_API_URL` e `NEXT_PUBLIC_WEB_URL` de cada ambiente. As URLs de preview devem estar na whitelist exata da API. Cookies cross-site de staging/produção exigem HTTPS, `Secure` e `SameSite=None`; navegadores que bloqueiam cookies de terceiros precisam dos frontends e API no mesmo domínio registrável antes do lançamento.
+Três projetos Vercel, com `rootDirectory` em `apps/web`, `apps/admin` e `apps/merchant`. O browser usa `NEXT_PUBLIC_API_URL=/api`; cada frontend encaminha ao `API_SERVER_URL` via proxy no mesmo domínio, mantendo refresh em cookie HttpOnly e validando Origin. `PROXY_SHARED_SECRET` (32+ caracteres) deve ser igual nos três frontends e na API, sempre armazenado como segredo. O proxy assina o identificador de cliente para não agrupar todos os visitantes no mesmo rate limit. Endereços de ingress confiáveis são explicitados em `TRUSTED_INGRESS_IPS`; jamais confiar em cabeçalhos públicos sem verificar o peer. URLs canônicas usam a URL real do deployment Vercel quando `NEXT_PUBLIC_WEB_URL` não é definido.
 
 EAS: autenticar com a conta proprietária, executar `eas init`, definir `EAS_PROJECT_ID`, URLs públicas e credenciais FCM/APNs. Perfis `development`, `preview` (APK) e `production` (AAB/iOS), channels distintos e runtime por versão do app. OTA só é habilitado quando o projectId real existir. Não submeter a lojas sem identidade jurídica, política revisada e credenciais reais.
 
@@ -50,5 +50,9 @@ Rollback: restaurar o deployment anterior no Vercel e a imagem anterior da API/w
 Habilitar backup automático/PITR no provedor antes de atender usuários reais. Para backup local, salve `pg_dump -Fc` em pasta ignorada com acesso restrito. Valide com `pg_restore` em banco novo, compare contagens e execute smoke de leitura. Dumps podem conter dados pessoais; nunca versioná-los.
 
 ## Operação
+
+Previews atuais usam um Quick Tunnel até a API/worker Docker deste computador. É staging temporário: depende do host ligado e da continuidade do túnel. Se o container de túnel for recriado, verifique a nova URL e o IP do peer antes de atualizar `API_SERVER_URL`/`TRUSTED_INGRESS_IPS`. Hospedagem permanente de API, PostgreSQL e Redis depende da conta do provedor e de seus secrets; não há produção gerenciada provisionada.
+
+Deploys são explícitos em staging. O `vercel.json` desabilita disparos automáticos do Git enquanto o CI hospedado está bloqueado por faturamento. A proteção SSO dos previews foi mantida. Tokens temporários de automação usados no QA foram revogados depois da validação.
 
 Monitorar falhas `/ready`, jobs falhos, `OutboxEvent.deadAt`, latência, conexões e espaço de disco. Nunca registrar tokens ou corpos de auth. Sentry de API usa `SENTRY_DSN` opcional com PII desativada; entrega externa depende de DSN real. Reconciliar notificações e push quando houver indisponibilidade do provedor. Não prometer entrega push exatamente uma vez.

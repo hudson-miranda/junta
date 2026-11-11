@@ -171,6 +171,9 @@ test('admin can create product and inspect metrics', async ({ page }) => {
   await page.getByLabel('Preço de demonstração em reais').fill('999');
   await page.getByRole('button', { name: 'Salvar produto' }).click();
   await expect(page.getByText('Produto salvo')).toBeVisible();
+  await page.getByRole('button', { name: 'Admin demo', exact: true }).click();
+  await expect(page).toHaveURL('http://localhost:3001/settings');
+  await expect(page.getByRole('heading', { name: 'Sua conta', exact: true })).toBeVisible();
 });
 test('public page metadata and mobile viewport have no horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
