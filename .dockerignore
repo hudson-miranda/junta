@@ -1,0 +1,10 @@
+**/node_modules
+**/.next
+**/.expo
+**/dist
+**/generated
+.git
+.env*
+test-results
+playwright-report
+.superpowers

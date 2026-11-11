@@ -1,0 +1,81 @@
+name: CI
+on:
+  push:
+    branches: [main, codex/junta-foundation]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: junta
+          POSTGRES_PASSWORD: ci_ephemeral_only
+          POSTGRES_DB: junta_test
+        ports: [5432:5432]
+        options: --health-cmd "pg_isready -U junta -d junta_test" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: [6379:6379]
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://junta:ci_ephemeral_only@localhost:5432/junta_test
+      TEST_DATABASE_URL: postgresql://junta:ci_ephemeral_only@localhost:5432/junta_test
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ephemeral-ci-key-with-at-least-32-characters
+      DEMO_PASSWORD: Ephemeral!CiPassword123
+      NEXT_PUBLIC_API_URL: /api
+      API_SERVER_URL: http://localhost:4000
+      NEXT_PUBLIC_WEB_URL: http://localhost:3000
+      EXPO_PUBLIC_API_URL: http://localhost:4000
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8081
+      CI: true
+      TURBO_TELEMETRY_DISABLED: 1
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+        with: { version: 10.6.5 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: { node-version: 22.14.0, cache: pnpm }
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-${{ runner.os }}-
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate
+      - run: pnpm --filter @junta/validation build
+      - run: pnpm db:migrate
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm audit --audit-level high
+      - run: node scripts/scan-secrets.mjs
+      - run: pnpm --filter @junta/mobile run doctor
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with:
+          name: browser-evidence
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: docker build -f infra/api.Dockerfile -t junta-api:ci .
