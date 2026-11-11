@@ -37,7 +37,7 @@ Três projetos Vercel, com `rootDirectory` em `apps/web`, `apps/admin` e `apps/m
 
 EAS: autenticar com a conta proprietária, executar `eas init`, definir `EAS_PROJECT_ID`, URLs públicas e credenciais FCM/APNs. Perfis `development`, `preview` (APK) e `production` (AAB/iOS), channels distintos e runtime por versão do app. OTA só é habilitado quando o projectId real existir. Não submeter a lojas sem identidade jurídica, política revisada e credenciais reais.
 
-Google/Apple exigem client IDs e registros dos identificadores/redirects no provedor; JWTs são verificados no backend. Sem client IDs o endpoint responde 503, sem identidade simulada. Email de recuperação: SMTP via `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURE`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM`. Mailpit é somente local.
+Google/Apple/Facebook exigem aplicativos registrados, IDs/chaves e configuração dos identificadores/redirects no provedor; identidades são verificadas no backend. Sem configuração o endpoint responde 503, sem identidade simulada. Consulte [SOCIAL_LOGIN.md](SOCIAL_LOGIN.md) para variáveis, nonce e ativação. Email de recuperação: SMTP via `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURE`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM`. Mailpit é somente local.
 
 ## Release, migrations e rollback
 

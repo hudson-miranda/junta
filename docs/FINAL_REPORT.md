@@ -10,7 +10,7 @@ Data: 2026-11-10, America/Sao_Paulo. Repositório originalmente vazio; implement
 - Nova [logo vetorial](../assets/brand/junta-logo.svg) com símbolo original de união em J e wordmark em curvas, replicada nos três portais e mobile; favicons e ícones regenerados.
 - Validação desta atualização: 35 testes de contratos/cliente/API + 11 Playwright = **46**, lint e TypeScript sem erros, builds Next e export Android/iOS/web, Expo Doctor 20/20, Docker com quatro migrations. Fotos decodificadas em navegador entre origens distintas e telas revisadas em desktop/mobile. APK/IPA e autenticação real nos provedores continuam sem comprovação externa.
 
-As evidências e URLs abaixo da entrega inicial são históricas; os previews desta atualização são registrados no worklog após a publicação.
+Os previews abaixo usam o commit `3f44c86`. As evidências anteriores de clone limpo e backup são identificadas pelos seus respectivos commits/snapshots.
 
 ## Arquitetura
 
@@ -25,7 +25,7 @@ Monorepo pnpm/Turborepo/TypeScript. NestJS modular, PostgreSQL/Prisma, Redis/Bul
 - Loja aprovada/membership, demanda agregada, oferta válida, auditoria, worker e registro de clique de afiliado.
 - Admin de catálogo, ofertas e campanhas; visão de demanda/intenção/lojas/métricas. Portal lojista e configurações de conta funcionais.
 - Analytics interno com adapter, configuração remota/flags globais, rate limit com identidade de proxy autenticada, logs JSON e request ID.
-- Adaptadores Google/Apple, push e Sentry condicionados às credenciais reais. Nenhuma identidade ou entrega externa foi simulada como sucesso.
+- Adaptadores Google/Apple/Facebook, push e Sentry condicionados às credenciais reais. Nenhuma identidade ou entrega externa foi simulada como sucesso.
 
 ## URLs
 
@@ -33,9 +33,9 @@ Previews exigem acesso Vercel ao time. A proteção SSO foi mantida; os tokens d
 
 | Aplicação      | Preview                                                               |
 | -------------- | --------------------------------------------------------------------- |
-| Web            | https://junta-chnvxo1gr-hudsons-projects-6f231da2.vercel.app          |
-| Admin          | https://junta-admin-h8pbl799w-hudsons-projects-6f231da2.vercel.app    |
-| Merchant       | https://junta-merchant-rahglbbm5-hudsons-projects-6f231da2.vercel.app |
+| Web            | https://junta-37jz7rogx-hudsons-projects-6f231da2.vercel.app          |
+| Admin          | https://junta-admin-409j8hnko-hudsons-projects-6f231da2.vercel.app    |
+| Merchant       | https://junta-merchant-69k7hfj8f-hudsons-projects-6f231da2.vercel.app |
 | API temporária | https://rec-atmospheric-coral-efficient.trycloudflare.com             |
 
 Local: web `:3000`, admin `:3001`, merchant `:3002`, API `:4000`, Swagger `/api/docs`, worker `:4001`, Expo `:8081`, Mailpit `:58025`. Para evitar disputa de porta, utilize API em container ou `pnpm dev`, conforme [DEPLOYMENT.md](DEPLOYMENT.md).
@@ -44,9 +44,9 @@ Local: web `:3000`, admin `:3001`, merchant `:3002`, API `:4000`, Swagger `/api/
 
 | Aplicação | Deployment                         | Commit de código |
 | --------- | ---------------------------------- | ---------------- |
-| Web       | `dpl_7hwUj7GK1xxJnsueoWM7DuqKZEQx` | `0b57de1`        |
-| Admin     | `dpl_BEWUCURryGMu2q2XoRruxkn84eVd` | `f276861`        |
-| Merchant  | `dpl_sNQtXwJEXxgDefWfkr7uWL94WgLJ` | `f276861`        |
+| Web       | `dpl_AfF9jLCPPE5hw1YPjk4r7EaTkPjv` | `3f44c86`        |
+| Admin     | `dpl_7n2QSx4Mpqmj4YBaNQvQsBSinBRy` | `3f44c86`        |
+| Merchant  | `dpl_85weTyTkcXWZAQSmB5quU1AR2KiA` | `3f44c86`        |
 
 Os três chegaram a READY. A jornada completa foi executada nas URLs Vercel: signup, reload de sessão, PS5, intenção 299900 centavos, share, oferta pelo merchant, aviso, abertura da oferta e clique. Admin criou produto. Após os ajustes finais, configurações dos portais responderam HTTP 200 e Open Graph respondeu HTTP 200 `image/png`.
 
@@ -54,7 +54,7 @@ API e worker usam imagem multi-stage, dependências de runtime, usuário `node`,
 
 ## Banco
 
-- Duas migrations aditivas, testadas em banco vazio e reaplicadas sem pendências; nenhum `db push`.
+- Quatro migrations aditivas, aplicadas sem pendências; nenhum `db push`. O upgrade das fotos foi testado sem seed, preservando URLs personalizadas.
 - DECIMAL, índices de busca, constraints de preço/datas, unicidade parcial de intenção ativa e locks transacionais.
 - Nove produtos demo ativos. Preços são fictícios. Produtos criados pelo QA foram desativados de forma reversível; histórico e auditoria foram preservados.
 - Backup `pg_dump -Fc` restaurado em banco isolado: origem e destino com 19 produtos totais, 25 usuários e 16 intenções no snapshot verificado. Registros adicionais de testes posteriores não alteram essa prova de recuperação.
@@ -70,7 +70,7 @@ Deploys Vercel foram explícitos em staging. Disparos automáticos do Git foram 
 
 ## Mobile
 
-Android/iOS/web exportados; Expo Doctor 20/20 e TypeScript passaram. Identificador `br.com.junta.app`, scheme `junta`, rotas de produto/oferta, onboarding, login, intenção, meus produtos, avisos, preferências e exclusão. Assets provisórios e perfis EAS development/preview/production presentes; runtime OTA vinculado à versão e desabilitado sem projectId real.
+Android/iOS/web exportados; Expo Doctor 20/20 e TypeScript passaram. Identificador `br.com.junta.app`, scheme `junta`, rotas de produto/oferta, onboarding, login, intenção, meus produtos, avisos, preferências e exclusão. Nova identidade vetorial e perfis EAS development/preview/production presentes; runtime OTA vinculado à versão e desabilitado sem projectId real.
 
 APK/IPA e Maestro não executados: EAS sem login e host sem Android SDK/toolchain iOS. Não houve teste em aparelho, assinatura, submissão ou publicação em loja. Exportação de JavaScript não foi tratada como validação nativa.
 
@@ -78,25 +78,26 @@ APK/IPA e Maestro não executados: EAS sem login e host sem Android SDK/toolchai
 
 | Verificação                          | Resultado                   |
 | ------------------------------------ | --------------------------- |
-| Validação de contratos               | 4 passaram                  |
+| Validação de contratos               | 5 passaram                  |
 | Client/sessão/rede                   | 5 passaram                  |
-| API/PostgreSQL real                  | 17 passaram                 |
+| API/PostgreSQL real                  | 19 passaram                 |
 | Isolamento e autenticação de ingress | 3 passaram                  |
-| Playwright em builds de produção     | 7 passaram                  |
-| Total da suíte automatizada          | **36 passaram, 0 falharam** |
+| Facebook clássico/JWT/nonce          | 3 passaram                  |
+| Playwright em builds de produção     | 11 passaram                  |
+| Total da suíte automatizada          | **46 passaram, 0 falharam** |
 | Expo Doctor                          | 20/20                       |
 | Lint/TypeScript/build completo       | Passaram                    |
 | Jornada externa Vercel               | Passou, sem page errors     |
 
 O clone separado em `C:\dev\junta-validation-8718f20`, atualizado até `0b57de1`, passou `pnpm install --frozen-lockfile`, geração Prisma, migrations/seed em banco isolado, lint, tipos, testes e build. Isso verificou a instalação sem os artefatos do checkout de implementação.
 
-Capturas: [desktop](evidence/web-desktop.png) e [viewport mobile](evidence/web-mobile.png). As capturas são da web; não representam teste em aparelho nativo.
+Capturas atualizadas: [desktop](evidence/web-desktop.png), [viewport mobile](evidence/web-mobile.png), [cadastro](evidence/signup-desktop.png) e [senha no celular](evidence/signup-mobile.png). As capturas são da web; não representam teste em aparelho nativo.
 
 ## Segurança
 
 Revisão independente identificou quatro problemas de troca de conta, sessões e ingress; todos receberam regressões que falharam antes e passaram depois. Detalhes e decisões em [REVIEW.md](REVIEW.md).
 
-Audit final: zero critical/high/moderate, um low em `deepmerge` transitivo da configuração Expo, sem patch publicado. Scan de arquivos versionados aprovado. Sessões e reset persistem hashes, CORS não aceita wildcard, dinheiro não usa float, isolamento merchant é imposto no servidor, notificações são únicas por usuário/evento e a entrega push externa é pelo menos uma vez.
+Audit final: zero critical/high/moderate, um low em `deepmerge` transitivo da configuração Expo, sem patch publicado. Scan de arquivos versionados aprovado. Sessões e reset persistem hashes, CORS de auth não aceita wildcard (assets são públicos), dinheiro não usa float, isolamento merchant é imposto no servidor, notificações são únicas por usuário/evento e a entrega push externa é pelo menos uma vez.
 
 ## Commits relevantes
 

@@ -2,6 +2,10 @@
 
 ## 2026-11-10 — conta, fotos e identidade
 
+- Publicado `3f44c86` na branch/PR #1. Vercel staging READY para web `dpl_AfF9jLCPPE5hw1YPjk4r7EaTkPjv`, admin `dpl_7n2QSx4Mpqmj4YBaNQvQsBSinBRy` e lojista `dpl_85weTyTkcXWZAQSmB5quU1AR2KiA`, todos no mesmo commit. URLs atuais no relatório final.
+- QA remoto repetiu a jornada completa de consumidor/lojista/admin com persistência após reload e nenhum erro no navegador. Verificação adicional conferiu logo, força da senha, disponibilidade honesta dos três provedores e viewport mobile nos previews. Três tokens temporários revogados; nenhum bypass de automação permanece. API/worker saudáveis; WEB_URL de recuperação aponta ao novo preview.
+- CI hospedado continua sem iniciar por faturamento da conta GitHub (run `42948980397`, jobs com zero steps). Os 46 testes são evidência local; main permanece protegida e não foi mesclada.
+
 - Cadastro web/admin/lojista e mobile com força estimada da senha, barra acessível, dica contextual, contador, requisito de 12 caracteres e mostrar/ocultar. Validação inline substitui o aviso nativo de comprimento. Recuperação web usa o mesmo componente.
 - Google/Apple apresentados junto ao novo Facebook; API verifica tokens clássicos e Limited Login, assinatura/audiência/emissor/expiração, ID do perfil e nonce de uso único no Redis. SDK Facebook opcional no build nativo e carregado somente no fluxo configurado. Credenciais reais continuam externas: botões indisponíveis são identificados sem simular login.
 - Nove fotos reais WebP/JPEG servidas pela API e aplicadas na web, admin, lojista, app e compartilhamento. Campo imageUrl, edição no admin, migration aditiva e backfill separado preservam fotos personalizadas e dispensam seed de desenvolvimento em upgrades. Fontes em PRODUCT_IMAGES.md.

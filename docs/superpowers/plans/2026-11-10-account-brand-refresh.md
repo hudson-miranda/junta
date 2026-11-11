@@ -12,7 +12,7 @@
 - [x] Obter fotos dos nove produtos em fontes dos fabricantes; registrar fontes, adicionar migration, seed, transporte e componentes web/mobile, permitir foto no admin.
 - [x] Criar logo vetorial e regenerar favicons/ícones mobile; aplicar cabeçalhos e cartões de compartilhamento.
 - [x] Integrar Facebook web/native e verificação de tokens clássicos/limitados; testar token inválido, audiência errada, expiração e indisponibilidade sem chaves.
-- [ ] Validar lint, tipos, testes, builds, navegador desktop/mobile e previews; atualizar documentação, publicar branch/PR.
+- [x] Validar lint, tipos, testes, builds, navegador desktop/mobile e previews; atualizar documentação, publicar branch/PR.
 
 ## Limites externos
 
