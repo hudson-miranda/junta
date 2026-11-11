@@ -1,4 +1,12 @@
 import { test, expect } from '@playwright/test';
+test('product sharing image renders as PNG', async ({ request }) => {
+  const response = await request.get('http://localhost:3000/p/playstation-5-slim/opengraph-image');
+  expect(response.status()).toBe(200);
+  expect(response.headers()['content-type']).toContain('image/png');
+  expect(Array.from((await response.body()).subarray(0, 8))).toEqual([
+    137, 80, 78, 71, 13, 10, 26, 10,
+  ]);
+});
 test('consumer searches, joins persisted demand, shares, and receives merchant offer', async ({
   page,
   browser,

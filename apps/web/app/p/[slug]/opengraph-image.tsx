@@ -37,8 +37,8 @@ export default async function Image({ params }: { params: Promise<{ slug: string
       <div style={{ fontSize: 55, fontWeight: 700 }}>junta.</div>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontSize: 75, fontWeight: 700 }}>{name}</div>
-        <div style={{ fontSize: 30, marginTop: 25 }}>
-          {demand} pessoas querem. Junte sua intenção.
+        <div style={{ display: 'flex', fontSize: 30, marginTop: 25 }}>
+          {`${demand} pessoas querem. Junte sua intenção.`}
         </div>
       </div>
       <div style={{ fontSize: 24 }}>Comprar melhor começa junto.</div>
