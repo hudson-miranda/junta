@@ -4,6 +4,8 @@
     "DATABASE_URL",
     "REDIS_URL",
     "JWT_SECRET",
+    "PROXY_SHARED_SECRET",
+    "TRUSTED_INGRESS_IPS",
     "NODE_ENV",
     "NEXT_PUBLIC_API_URL",
     "API_SERVER_URL",
@@ -11,7 +13,10 @@
     "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
     "NEXT_PUBLIC_APPLE_CLIENT_ID",
     "NEXT_PUBLIC_WEB_URL",
-    "EXPO_PUBLIC_API_URL"
+    "EXPO_PUBLIC_API_URL",
+    "EXPO_PUBLIC_*",
+    "NEXT_PUBLIC_*",
+    "EAS_PROJECT_ID"
   ],
   "tasks": {
     "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**", "!.next/cache/**"] },

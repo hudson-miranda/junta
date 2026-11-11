@@ -19,4 +19,5 @@ playwright-report/
 .audit.local.json
 *.tsbuildinfo
 .local/
+**/next-env.d.ts
 apps/api/generated/

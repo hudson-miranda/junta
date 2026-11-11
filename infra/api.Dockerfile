@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/validation/package.json packages/validation/package.json
-RUN pnpm install --frozen-lockfile --filter @junta/api... 
+RUN pnpm install --frozen-lockfile --filter @junta/api...
 COPY packages/validation packages/validation
 COPY apps/api apps/api
 RUN pnpm --filter @junta/validation build && pnpm --filter @junta/api build

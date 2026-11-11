@@ -11,6 +11,8 @@ services:
       DATABASE_URL: postgresql://junta:${POSTGRES_PASSWORD:-junta_local}@postgres:5432/junta?schema=public
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:?Run node scripts/setup-env.mjs}
+      PROXY_SHARED_SECRET: ${PROXY_SHARED_SECRET:?Run node scripts/setup-env.mjs --ensure-proxy}
+      TRUSTED_INGRESS_IPS: ${TRUSTED_INGRESS_IPS:-}
       CORS_ORIGINS: ${CORS_ORIGINS}
       WEB_URL: ${WEB_URL:-http://localhost:3000}
       MAIL_HOST: mailpit

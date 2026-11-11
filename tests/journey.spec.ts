@@ -33,7 +33,9 @@ test('consumer searches, joins persisted demand, shares, and receives merchant o
   await expect(page.getByLabel('Link para compartilhar')).toHaveValue(/ref=/);
   await page.getByRole('link', { name: 'Meus produtos', exact: true }).click();
   await expect(page).toHaveURL('http://localhost:3000/me');
-  await expect(page.getByRole('heading',{name:'PlayStation 5 Slim',exact:true})).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'PlayStation 5 Slim', exact: true }),
+  ).toBeVisible();
   const context = await browser.newContext();
   const merchant = await context.newPage();
   await merchant.goto('http://localhost:3002');
@@ -81,6 +83,80 @@ test('modal keeps keyboard focus and closes with Escape', async ({ page }) => {
     data: {},
   });
   expect(response.status()).toBe(403);
+});
+test('same-cookie tabs refresh concurrently without revoking the account', async ({
+  page,
+  context,
+}) => {
+  const response = await page.request.post('http://localhost:3000/api/auth/signup', {
+    data: {
+      name: 'Two tabs',
+      email: `tabs-${Date.now()}@example.com`,
+      password: 'Tabs!Password123',
+    },
+  });
+  expect(response.status()).toBe(201);
+  const session = await response.json();
+  await page.request.post('http://localhost:3000/api/intents', {
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`,
+      'Idempotency-Key': `tabs-${Date.now()}`,
+    },
+    data: { variantId: 'playstation-5-slim-default', targetCents: 299900, horizon: 'WEEK' },
+  });
+  await context.route('**/api/auth/refresh', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await route.continue();
+  });
+  const second = await context.newPage();
+  await Promise.all([
+    page.goto('http://localhost:3000/me'),
+    second.goto('http://localhost:3000/me'),
+  ]);
+  await expect(
+    page.getByRole('heading', { name: 'PlayStation 5 Slim', exact: true }),
+  ).toBeVisible();
+  await expect(
+    second.getByRole('heading', { name: 'PlayStation 5 Slim', exact: true }),
+  ).toBeVisible();
+  await second.close();
+});
+test('account switch hides the previous account data even when the new request fails', async ({
+  page,
+}) => {
+  const suffix = Date.now();
+  const result = await page.request.post('http://localhost:3000/api/auth/signup', {
+    data: { name: 'Account A', email: `a-${suffix}@example.com`, password: 'Account!Password123' },
+  });
+  const session = await result.json();
+  await page.request.post('http://localhost:3000/api/intents', {
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`,
+      'Idempotency-Key': `scope-${suffix}`,
+    },
+    data: { variantId: 'playstation-5-slim-default', targetCents: 299900, horizon: 'WEEK' },
+  });
+  await page.goto('http://localhost:3000/me');
+  await expect(
+    page.getByRole('heading', { name: 'PlayStation 5 Slim', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Sair', exact: true }).click();
+  await page.getByRole('button', { name: 'Criar uma conta' }).click();
+  await page.getByLabel('Seu nome').fill('Account B');
+  await page.getByLabel('Email', { exact: true }).fill(`b-${suffix}@example.com`);
+  await page.getByLabel('Senha', { exact: true }).fill('Account!Password123');
+  await page.route('**/api/intents', (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Temporariamente indisponível' }),
+    }),
+  );
+  await page.getByRole('button', { name: 'Criar conta', exact: true }).click();
+  await expect(page.getByText('Temporariamente indisponível')).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'PlayStation 5 Slim', exact: true }),
+  ).not.toBeVisible();
 });
 test('admin can create product and inspect metrics', async ({ page }) => {
   await page.goto('http://localhost:3001');

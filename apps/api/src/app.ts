@@ -42,6 +42,7 @@ import { AuthService, publicUser } from './auth';
 import { PlatformService } from './platform';
 import { config } from './config';
 import { captureError } from './observability';
+import { rateIdentity } from './rate';
 
 @Catch()
 class Errors implements ExceptionFilter {
@@ -229,10 +230,14 @@ export async function createApp(options: { db?: PrismaClient; logging?: boolean 
           enabled: z.boolean().default(true),
         })
         .parse(body);
-      return db.device.upsert({
-        where: { token: data.token },
-        create: { ...data, userId: user.id },
-        update: { ...data, userId: user.id, lastSeenAt: new Date() },
+      return db.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${user.id}))`;
+        await auth.user(token);
+        return tx.device.upsert({
+          where: { token: data.token },
+          create: { ...data, userId: user.id },
+          update: { ...data, userId: user.id, lastSeenAt: new Date() },
+        });
       });
     }
     @Get('products') products(@Query('q') q: string, @Query('page') page: string) {
@@ -468,7 +473,16 @@ export async function createApp(options: { db?: PrismaClient; logging?: boolean 
     }
     try {
       const bucket = req.path.startsWith('/auth') ? 'auth' : req.path.split('/')[1];
-      const key = `junta:rate:${bucket}:${req.ip}`;
+      const identity = rateIdentity(
+        req.socket.remoteAddress ?? 'unknown',
+        req.headers,
+        process.env.PROXY_SHARED_SECRET ?? '',
+        (process.env.TRUSTED_INGRESS_IPS ?? '')
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean),
+      );
+      const key = `junta:rate:${bucket}:${identity}`;
       const count = (await redis.eval(
         "local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],60) end; return n",
         1,

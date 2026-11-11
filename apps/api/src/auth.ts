@@ -134,19 +134,20 @@ export class AuthService {
     if (!found) throw new UnauthorizedException('Sessão inválida');
     // Commit replay revocation before throwing; do not roll it back with the error.
     const claim = await this.db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${found.userId}))`;
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${found.family}))`;
       const s = await tx.session.findUniqueOrThrow({
         where: { id: found.id },
         include: { user: true },
       });
-      if (s.revokedAt || s.expiresAt < new Date() || s.user.deletedAt) {
+      if (s.revokedAt || s.rotatedAt || s.expiresAt < new Date() || s.user.deletedAt) {
         await tx.session.updateMany({
           where: { family: s.family },
           data: { revokedAt: new Date() },
         });
         return null;
       }
-      await tx.session.update({ where: { id: s.id }, data: { revokedAt: new Date() } });
+      await tx.session.update({ where: { id: s.id }, data: { rotatedAt: new Date() } });
       const refreshToken = randomBytes(48).toString('base64url');
       const next = await tx.session.create({
         data: {
@@ -198,9 +199,13 @@ export class AuthService {
     if (!roles.includes(user.role)) throw new ForbiddenException('Acesso não permitido');
   }
   async logout(user: User) {
-    await this.db.session.updateMany({
-      where: { userId: user.id },
-      data: { revokedAt: new Date() },
+    await this.db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${user.id}))`;
+      await tx.session.updateMany({
+        where: { userId: user.id },
+        data: { revokedAt: new Date() },
+      });
+      await tx.device.updateMany({ where: { userId: user.id }, data: { enabled: false } });
     });
     return { ok: true };
   }

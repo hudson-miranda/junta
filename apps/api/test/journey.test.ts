@@ -1,6 +1,7 @@
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { createHmac, randomUUID } from 'node:crypto';
 import { PrismaClient } from '../generated/client';
 import { createApp } from '../src/app';
 import { processOutbox } from '../src/outbox';
@@ -246,6 +247,11 @@ test('refresh rotation stores hashes and replay revokes entire family', async ()
   assert.equal(await db.session.count({ where: { tokenHash: login.refreshToken } }), 0);
   const rotated = await request('/auth/refresh', 'POST', { refreshToken: login.refreshToken });
   assert.equal(rotated.status, 200);
+  assert.equal(
+    (await request('/me', 'GET', undefined, login.accessToken)).status,
+    200,
+    'normal rotation must preserve other tabs until access-token expiry',
+  );
   assert.notEqual(rotated.body.refreshToken, login.refreshToken);
   assert.equal(
     (await request('/auth/refresh', 'POST', { refreshToken: login.refreshToken })).status,
@@ -390,4 +396,48 @@ test('account deletion cancels demand and revokes identity without losing histor
       'deleted-user-intent',
     ),
   );
+});
+test('logout detaches push devices and subsequent login cannot receive old account alerts', async () => {
+  const one = (
+    await request('/auth/signup', 'POST', {
+      name: 'Device A',
+      email: 'device-a@example.com',
+      password: 'Device!Password123',
+    })
+  ).body;
+  const token = 'ExpoPushToken[shared-device-test]';
+  assert.equal(
+    (await request('/devices', 'POST', { token, platform: 'android' }, one.accessToken)).status,
+    201,
+  );
+  assert.equal((await db.device.findUniqueOrThrow({ where: { token } })).enabled, true);
+  assert.equal((await request('/auth/logout', 'POST', {}, one.accessToken)).status, 200);
+  assert.equal((await db.device.findUniqueOrThrow({ where: { token } })).enabled, false);
+  const two = (
+    await request('/auth/signup', 'POST', {
+      name: 'Device B',
+      email: 'device-b@example.com',
+      password: 'Device!Password123',
+    })
+  ).body;
+  assert.equal(
+    (await request('/devices', 'POST', { token, platform: 'android' }, two.accessToken)).status,
+    201,
+  );
+  assert.equal((await db.device.findUniqueOrThrow({ where: { token } })).userId, two.user.id);
+});
+test('separate signed proxy clients do not exhaust each other catalogue allowance', async () => {
+  const secret = process.env.PROXY_SHARED_SECRET;
+  if (!secret) throw new Error('Test requires PROXY_SHARED_SECRET');
+  for (const client of [randomUUID(), randomUUID()]) {
+    const key = createHmac('sha256', secret).update(client).digest('hex'),
+      proof = createHmac('sha256', secret).update(key).digest('hex');
+    for (let n = 0; n < 61; n++) {
+      const response = await fetch(base + '/products?q=PlayStation', {
+        headers: { 'X-Junta-Rate-Key': key, 'X-Junta-Proxy-Proof': proof },
+      });
+      assert.equal(response.status, 200);
+      await response.arrayBuffer();
+    }
+  }
 });

@@ -1,12 +1,20 @@
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { ApiClient, ApiError } from '../src';
+import { ApiClient, ApiError, type User } from '../src';
 let status = 200,
   calls = 0,
   base: string;
 const server = createServer((req, res) => {
   calls++;
+  if (req.url === '/delayed') {
+    const old = req.headers.authorization === 'Bearer old';
+    setTimeout(() => {
+      res.writeHead(old ? 401 : 200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(old ? { message: 'Expired' } : { ok: true }));
+    }, 30);
+    return;
+  }
   res.writeHead(status, { 'Content-Type': req.url === '/html' ? 'text/html' : 'application/json' });
   res.end(
     req.url === '/html'
@@ -17,6 +25,17 @@ const server = createServer((req, res) => {
             : { message: 'Unavailable' },
         ),
   );
+});
+test('delayed 401 uses an already rotated access token without another refresh', async () => {
+  status = 200;
+  calls = 0;
+  const client = new ApiClient(base);
+  await client.accept({ accessToken: 'old', user: { id: 'u' } as User });
+  const result = client.request<{ ok: boolean }>('/delayed');
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  await client.accept({ accessToken: 'new', user: { id: 'u' } as User });
+  assert.equal((await result).ok, true);
+  assert.equal(calls, 2);
 });
 before(async () => {
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));

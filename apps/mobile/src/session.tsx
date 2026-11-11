@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { ApiClient, type User, type Session } from '@junta/api-client';
+import { syncPushDevice } from './push';
 let webRefresh: string | null = null;
 let referralCode: string | null = null;
 export async function captureReferral(code: string, slug: string) {
@@ -44,6 +45,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setReady(true);
     });
   }, []);
+  useEffect(() => {
+    if (user) void syncPushDevice(api).catch(() => {});
+  }, [user?.id]);
   return (
     <Context.Provider
       value={{
@@ -65,23 +69,33 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 }
 export const useSession = () => useContext(Context);
 export function useRemote<T>(path: string) {
-  const [data, setData] = useState<T | null>(null),
-    [error, setError] = useState(''),
+  const { user } = useSession(),
+    scope = `${user?.id ?? 'public'}:${path}`;
+  const [snapshot, setSnapshot] = useState<{ scope: string; data: T } | null>(null),
+    [failure, setFailure] = useState<{ scope: string; message: string } | null>(null),
     [revision, setRevision] = useState(0);
   useEffect(() => {
     let active = true;
-    setError('');
+    setFailure(null);
     void api
       .request<T>(path)
       .then((v) => {
-        if (active) setData(v);
+        if (active) setSnapshot({ scope, data: v });
       })
       .catch((e) => {
-        if (active) setError(e instanceof Error ? e.message : 'Não foi possível carregar');
+        if (active)
+          setFailure({
+            scope,
+            message: e instanceof Error ? e.message : 'Não foi possível carregar',
+          });
       });
     return () => {
       active = false;
     };
-  }, [path, revision]);
-  return { data, error, reload: () => setRevision((v) => v + 1) };
+  }, [path, scope, revision]);
+  return {
+    data: snapshot?.scope === scope ? snapshot.data : null,
+    error: failure?.scope === scope ? failure.message : '',
+    reload: () => setRevision((v) => v + 1),
+  };
 }

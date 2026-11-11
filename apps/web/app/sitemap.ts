@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_WEB_URL ?? 'http://localhost:3000';
+  const base =
+    process.env.NEXT_PUBLIC_WEB_URL ??
+    (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000');
   let slugs: string[] = [];
   try {
     const r = await fetch(`${process.env.API_SERVER_URL ?? 'http://localhost:4000'}/products`, {

@@ -83,6 +83,11 @@ export interface SessionStorage {
   get: () => Promise<string | null>;
   set: (token: string | null) => Promise<void>;
 }
+export async function browserRefreshLock<T>(action: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== 'undefined' && navigator.locks)
+    return navigator.locks.request('junta-session-refresh', action);
+  return action();
+}
 export class ApiClient {
   readonly analytics = new Analytics({
     track: async (name, properties) => {
@@ -91,9 +96,11 @@ export class ApiClient {
   });
   token: string | null = null;
   private refreshPromise: Promise<Session | null> | null = null;
+  private identity: string | null = null;
   constructor(
     readonly base: string,
     readonly storage?: SessionStorage,
+    readonly coordinateRefresh: <T>(action: () => Promise<T>) => Promise<T> = browserRefreshLock,
   ) {}
   async request<T>(
     path: string,
@@ -103,6 +110,8 @@ export class ApiClient {
     retry = true,
   ): Promise<T> {
     let response: Response;
+    const startedToken = this.token,
+      startedIdentity = this.identity;
     const controller = new AbortController(),
       timer = setTimeout(() => controller.abort(), 15000);
     try {
@@ -123,6 +132,10 @@ export class ApiClient {
       clearTimeout(timer);
     }
     if (response.status === 401 && retry && !path.startsWith('/auth')) {
+      if (startedIdentity && this.identity !== startedIdentity)
+        throw new ApiError('Sua conta mudou. Tente novamente.', 401);
+      if (this.token && this.token !== startedToken)
+        return this.request(path, method, body, key, false);
       if (await this.restore()) return this.request(path, method, body, key, false);
     }
     const value = await response
@@ -138,6 +151,7 @@ export class ApiClient {
   }
   async accept(session: Session) {
     this.token = session.accessToken;
+    this.identity = session.user.id;
     if (session.refreshToken && this.storage) await this.storage.set(session.refreshToken);
     return session;
   }
@@ -152,7 +166,7 @@ export class ApiClient {
   }
   restore() {
     if (!this.refreshPromise)
-      this.refreshPromise = (async () => {
+      this.refreshPromise = this.coordinateRefresh(async () => {
         try {
           const refreshToken = await this.storage?.get();
           const session = await this.request<Session>(
@@ -171,7 +185,7 @@ export class ApiClient {
         } finally {
           this.refreshPromise = null;
         }
-      })();
+      });
     return this.refreshPromise;
   }
   async logout() {
@@ -179,6 +193,7 @@ export class ApiClient {
       await this.request('/auth/logout', 'POST', {});
     } finally {
       this.token = null;
+      this.identity = null;
       await this.storage?.set(null);
     }
   }

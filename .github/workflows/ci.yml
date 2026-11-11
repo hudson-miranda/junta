@@ -30,6 +30,7 @@ jobs:
       TEST_DATABASE_URL: postgresql://junta:ci_ephemeral_only@localhost:5432/junta_test
       REDIS_URL: redis://localhost:6379
       JWT_SECRET: ephemeral-ci-key-with-at-least-32-characters
+      PROXY_SHARED_SECRET: ephemeral-ci-proxy-key-with-at-least-32-characters
       DEMO_PASSWORD: Ephemeral!CiPassword123
       NEXT_PUBLIC_API_URL: /api
       API_SERVER_URL: http://localhost:4000

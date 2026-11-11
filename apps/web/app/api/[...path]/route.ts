@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { createHmac } from 'node:crypto';
 export const dynamic = 'force-dynamic';
 async function proxy(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const origin = request.headers.get('origin');
@@ -12,6 +13,19 @@ async function proxy(request: NextRequest, { params }: { params: Promise<{ path:
   );
   target.search = request.nextUrl.search;
   const headers = new Headers({ 'X-Junta-Browser': '1' });
+  const secret = process.env.PROXY_SHARED_SECRET;
+  if (secret) {
+    const ip = (
+      request.headers.get('x-vercel-forwarded-for') ??
+      request.headers.get('x-forwarded-for') ??
+      'local'
+    )
+      .split(',')[0]
+      .trim();
+    const key = createHmac('sha256', secret).update(ip).digest('hex');
+    headers.set('X-Junta-Rate-Key', key);
+    headers.set('X-Junta-Proxy-Proof', createHmac('sha256', secret).update(key).digest('hex'));
+  }
   for (const name of [
     'content-type',
     'authorization',

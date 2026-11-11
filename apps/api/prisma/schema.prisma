@@ -43,6 +43,7 @@ model Session {
   family String
   expiresAt DateTime
   revokedAt DateTime?
+  rotatedAt DateTime?
   createdAt DateTime @default(now())
   @@index([userId, family])
 }

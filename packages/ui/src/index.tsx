@@ -317,26 +317,32 @@ export function Feedback({ error, notice }: { error?: string; notice?: string })
   );
 }
 function useRemote<T>(path: string | null) {
-  const [data, setData] = useState<T | null>(null),
-    [error, setError] = useState(''),
+  const { user } = useContext(Auth),
+    scope = `${user?.id ?? 'public'}:${path ?? ''}`;
+  const [snapshot, setSnapshot] = useState<{ scope: string; data: T } | null>(null),
+    [failure, setFailure] = useState<{ scope: string; message: string } | null>(null),
     [revision, setRevision] = useState(0);
   useEffect(() => {
     if (!path) return;
     let alive = true;
-    setError('');
+    setFailure(null);
     void api
       .request<T>(path)
       .then((d) => {
-        if (alive) setData(d);
+        if (alive) setSnapshot({ scope, data: d });
       })
       .catch((e) => {
-        if (alive) setError(errorText(e));
+        if (alive) setFailure({ scope, message: errorText(e) });
       });
     return () => {
       alive = false;
     };
-  }, [path, revision]);
-  return { data, error, reload: () => setRevision((n) => n + 1) };
+  }, [path, scope, revision]);
+  return {
+    data: path && snapshot?.scope === scope ? snapshot.data : null,
+    error: failure?.scope === scope ? failure.message : '',
+    reload: () => setRevision((n) => n + 1),
+  };
 }
 export function ProductArt({
   kind = 'console',
