@@ -20,3 +20,14 @@
 - Vercel: acesso ao time foi liberado pelo usuário; projetos `junta-web`, `junta-admin`, `junta-merchant` criados em Node 22. Nenhum domínio foi comprado ou alterado.
 - EAS `whoami`: `Not logged in`. Credenciais OAuth, FCM/APNs, Sentry DSN e dados jurídicos não fornecidos.
 - Browser: cadastro, recuperação de sessão HttpOnly, admin, metadados, viewport e foco de modal validados em rodadas incrementais; jornada completa ainda sendo consolidada contra builds estáveis.
+
+## 2026-11-10 — validação e entrega
+
+- Revisão independente: quatro achados importantes reproduzidos e corrigidos com RED -> GREEN; nenhum crítico. Cache por identidade, refresh entre abas/401 atrasado, ingress autenticado e desvinculação de push no logout.
+- `rotatedAt` separou consumo de refresh de revogação de sessão; migration aditiva testada do zero. Replay/logout/reset continuam revogando acesso.
+- Jornada externa Vercel passou com sessão após reload, intenção, share, oferta merchant, inbox, clique e criação administrativa. Sem page errors; screenshots locais e evidências web versionadas. Tokens temporários de automação revogados; SSO preservado.
+- Configurações de conta dos portais receberam rotas compartilhadas. Na checagem final, a imagem OG apresentou HTTP 500; log identificou layout Satori, regressão reproduziu a falha e passou após ajuste. Runtime Vercel agora devolve PNG HTTP 200.
+- Resultado final: 4 contratos + 5 client + 17 integração API + 3 ingress + 7 browser = 36 testes, zero falhas; lint, tipos, build completo, Doctor 20/20 e Docker aprovados.
+- Clone externo atualizado até `0b57de1`: frozen install, migrations/seed isolados, lint, tipos, testes e build passaram. Restore isolado confirmou contagens iguais ao snapshot de origem. Dumps e ambientes preservados localmente/ignorados.
+- Main protegida por checks `quality`/`container`, inclusive administradores. GitHub Actions continua impedido por billing antes de executar; não foi declarada aprovação de CI.
+- Deploys explícitos de staging READY; API/worker/PostgreSQL/Redis/Mailpit saudáveis. Limites externos registrados em STATUS e FINAL_REPORT. Não houve cobrança, DNS principal ou publicação em lojas.

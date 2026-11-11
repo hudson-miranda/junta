@@ -5,6 +5,8 @@ Intenção de compra + demanda coletiva + preço-alvo + ofertas.
 Beta executável com API NestJS, PostgreSQL/Prisma, Redis/BullMQ, Expo e portais Next.js.
 
 ```powershell
+git clone --branch codex/junta-foundation https://github.com/hudson-miranda/junta.git
+cd junta
 pnpm install --frozen-lockfile
 node scripts/setup-env.mjs
 docker compose up -d
