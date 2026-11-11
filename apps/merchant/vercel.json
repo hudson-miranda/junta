@@ -1,0 +1,8 @@
+{
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. \u0026\u0026 pnpm turbo build --filter=@junta/merchant",
+  "git": {
+    "deploymentEnabled": false
+  }
+}

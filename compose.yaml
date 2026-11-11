@@ -1,0 +1,31 @@
+name: junta
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: junta
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-junta_local}
+      POSTGRES_DB: junta
+    ports: ['127.0.0.1:55432:5432']
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/init-test-db.sql:/docker-entrypoint-initdb.d/01-test.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U junta -d junta']
+      interval: 5s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    ports: ['127.0.0.1:16379:6379']
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes: ['redis_data:/data']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      retries: 10
+  mailpit:
+    image: axllent/mailpit:v1.29
+    ports: ['127.0.0.1:51025:1025', '127.0.0.1:58025:8025']
+volumes:
+  postgres_data:
+  redis_data:

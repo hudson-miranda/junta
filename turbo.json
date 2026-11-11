@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "DATABASE_URL",
+    "REDIS_URL",
+    "JWT_SECRET",
+    "PROXY_SHARED_SECRET",
+    "TRUSTED_INGRESS_IPS",
+    "NODE_ENV",
+    "NEXT_PUBLIC_API_URL",
+    "API_SERVER_URL",
+    "NEXT_PUBLIC_SENTRY_DSN",
+    "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+    "NEXT_PUBLIC_APPLE_CLIENT_ID",
+    "NEXT_PUBLIC_WEB_URL",
+    "EXPO_PUBLIC_API_URL",
+    "EXPO_PUBLIC_*",
+    "NEXT_PUBLIC_*",
+    "EAS_PROJECT_ID"
+  ],
+  "tasks": {
+    "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**", "!.next/cache/**"] },
+    "typecheck": { "dependsOn": ["^build"], "outputs": [] },
+    "dev": { "dependsOn": ["^build"], "cache": false, "persistent": true },
+    "@junta/api#build": { "dependsOn": ["^build"], "outputs": ["dist/**", "generated/**"] },
+    "@junta/ui#build": { "dependsOn": ["^build"], "outputs": [] }
+  }
+}

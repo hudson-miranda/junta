@@ -16,4 +16,8 @@ playwright-report/
 *.aab
 *.ipa
 .DS_Store
+.audit.local.json
+*.tsbuildinfo
+.local/
+**/next-env.d.ts
 apps/api/generated/

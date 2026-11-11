@@ -1,0 +1,11 @@
+{
+  "name": "@junta/worker",
+  "private": true,
+  "version": "0.1.0",
+  "dependencies": {
+    "@junta/api": "workspace:*"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @junta/api worker"
+  }
+}
