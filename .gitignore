@@ -16,4 +16,7 @@ playwright-report/
 *.aab
 *.ipa
 .DS_Store
+.audit.local.json
+*.tsbuildinfo
+.local/
 apps/api/generated/
