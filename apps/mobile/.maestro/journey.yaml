@@ -1,0 +1,25 @@
+# Run against development/preview build with EMAIL and PASSWORD supplied at runtime.
+appId: br.com.junta.app
+---
+- launchApp
+- tapOn:
+    text: 'Já tenho conta'
+    optional: true
+- tapOn: 'Email'
+- inputText: ${EMAIL}
+- tapOn: 'Senha'
+- inputText: ${PASSWORD}
+- tapOn: 'Entrar'
+- assertVisible: 'Qual é o seu próximo desejo?'
+- tapOn: 'Pesquisar produtos'
+- inputText: 'PlayStation'
+- tapOn: 'PlayStation 5 Slim'
+- tapOn: 'Eu quero'
+- tapOn: 'Esta semana'
+- tapOn: 'Preço-alvo em reais'
+- inputText: '2999'
+- hideKeyboard
+- tapOn: 'Confirmar participação'
+- assertVisible: 'Participação confirmada'
+- tapOn: 'Meus produtos'
+- assertVisible: 'PlayStation 5 Slim'
