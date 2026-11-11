@@ -37,6 +37,22 @@ const config: ExpoConfig = {
     'expo-notifications',
     'expo-dev-client',
     'expo-apple-authentication',
+    ...(process.env.EXPO_PUBLIC_FACEBOOK_APP_ID && process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN
+      ? [
+          [
+            'react-native-fbsdk-next',
+            {
+              appID: process.env.EXPO_PUBLIC_FACEBOOK_APP_ID,
+              clientToken: process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN,
+              displayName: 'JUNTA',
+              scheme: `fb${process.env.EXPO_PUBLIC_FACEBOOK_APP_ID}`,
+              advertiserIDCollectionEnabled: false,
+              autoLogAppEventsEnabled: false,
+              isAutoInitEnabled: false,
+            },
+          ] as [string, object],
+        ]
+      : []),
     ...(process.env.EXPO_PUBLIC_GOOGLE_IOS_URL_SCHEME
       ? [
           [

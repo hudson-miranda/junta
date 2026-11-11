@@ -4,7 +4,6 @@ import {
   useContext,
   useEffect,
   useState,
-  useId,
   useRef,
   type ReactNode,
   type FormEvent,
@@ -37,6 +36,9 @@ import {
 } from '@junta/api-client';
 import { initMonitoring } from './monitoring';
 import { SocialLogin } from './social';
+import { BrandMark } from './brand';
+import { PasswordField } from './password';
+import { password as passwordSchema } from '@junta/validation';
 export { reportClientError } from './monitoring';
 
 export const api = new ApiClient(process.env.NEXT_PUBLIC_API_URL ?? '/api');
@@ -92,12 +94,13 @@ export function Shell({
       <header className="header">
         <div className="header-inner">
           <Link href="/" className="logo" aria-label="JUNTA início">
-            <span className="brand-mark">
-              <i />
-              <i />
-              <i />
-            </span>
-            junta<span className="logo-dot">.</span>
+            <img
+              src="/brand/junta-logo.svg"
+              alt=""
+              width={139}
+              height={45}
+              className="brand-logo"
+            />
           </Link>
           {mode === 'web' ? (
             <nav aria-label="Menu principal">
@@ -221,6 +224,8 @@ export function LoginForm() {
       }
       const email = String(data.get('email')),
         password = String(data.get('password'));
+      if (signup && !passwordSchema.safeParse(password).success)
+        throw new Error('Use uma senha entre 12 e 128 caracteres.');
       accept(
         signup
           ? await api.signup({
@@ -240,7 +245,7 @@ export function LoginForm() {
   return (
     <div className="auth-panel">
       <div className="auth-symbol">
-        <Users />
+        <BrandMark />
       </div>
       <h2>
         {forgot ? 'Recuperar acesso' : signup ? 'Você já chega junto.' : 'Bom ter você aqui.'}
@@ -261,20 +266,7 @@ export function LoginForm() {
           Email
           <input name="email" type="email" autoComplete="email" required />
         </label>
-        {!forgot && (
-          <label>
-            Senha
-            <input
-              name="password"
-              aria-label="Senha"
-              type="password"
-              autoComplete={signup ? 'new-password' : 'current-password'}
-              minLength={signup ? 12 : 1}
-              required
-            />
-            {signup && <small>Use pelo menos 12 caracteres.</small>}
-          </label>
-        )}
+        {!forgot && <PasswordField creation={signup} />}
         <Feedback error={error} notice={notice} />
         <button className="button full" disabled={busy}>
           {busy ? 'Aguarde…' : forgot ? 'Enviar instruções' : signup ? 'Criar conta' : 'Entrar'}
@@ -344,84 +336,35 @@ function useRemote<T>(path: string | null) {
     reload: () => setRevision((n) => n + 1),
   };
 }
-export function ProductArt({
-  kind = 'console',
+export function ProductPhoto({
+  product,
   large = false,
 }: {
-  kind?: string;
+  product?: Pick<Product, 'name' | 'imageUrl'>;
   large?: boolean;
 }) {
-  const id = useId().replaceAll(':', '');
+  const [failed, setFailed] = useState<string | null>(null);
+  const path = product?.imageUrl;
+  const src = path?.startsWith('/assets/products/')
+    ? `${api.base}${path}`
+    : path?.startsWith('https://')
+      ? path
+      : null;
   return (
-    <div className={`product-art art-${kind} ${large ? 'large' : ''}`} aria-hidden="true">
-      <svg viewBox="0 0 320 240" fill="none">
-        <defs>
-          <linearGradient id={id} x1="70" y1="30" x2="250" y2="210" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#fff" />
-            <stop offset="1" stopColor="#d5dcf3" />
-          </linearGradient>
-        </defs>
-        <ellipse cx="164" cy="208" rx="85" ry="12" fill="#172344" opacity=".09" />
-        {kind === 'phone' ? (
-          <g transform="rotate(12 160 120)">
-            <rect x="111" y="27" width="99" height="177" rx="22" fill="#2549eb" />
-            <rect x="117" y="32" width="88" height="165" rx="17" fill={`url(#${id})`} />
-            <rect x="142" y="39" width="39" height="10" rx="5" fill="#172344" />
-            <circle cx="140" cy="73" r="10" fill="#2549eb" />
-            <circle cx="166" cy="73" r="10" fill="#172344" />
-            <path d="M133 151Q172 78 201 128V180Q180 202 133 180Z" fill="#a9b9ff" />
-          </g>
-        ) : kind === 'laptop' ? (
-          <g>
-            <rect x="68" y="49" width="184" height="126" rx="10" fill="#172344" />
-            <rect x="76" y="57" width="168" height="108" rx="4" fill="#b5c5ff" />
-            <path d="M77 145L143 72L244 146V165H77Z" fill="#2549eb" />
-            <path d="M68 175H252L278 192Q280 201 268 203H52Q40 201 42 192Z" fill={`url(#${id})`} />
-            <path d="M136 176H184L190 186H130Z" fill="#aeb8d3" />
-          </g>
-        ) : kind === 'tv' ? (
-          <g>
-            <rect x="35" y="39" width="250" height="151" rx="8" fill="#172344" />
-            <rect x="43" y="47" width="234" height="133" rx="3" fill="#aebfff" />
-            <circle cx="195" cy="95" r="43" fill="#ff9f88" />
-            <path d="M43 172L124 74L212 180H43Z" fill="#2549eb" />
-            <path d="M149 191H171L184 207H136Z" fill="#172344" />
-          </g>
-        ) : kind === 'audio' ? (
-          <g transform="rotate(-12 160 120)">
-            <rect x="94" y="115" width="133" height="83" rx="31" fill={`url(#${id})`} />
-            <path d="M94 139H227" stroke="#b8c2de" />
-            <rect x="112" y="49" width="19" height="78" rx="9" fill="#fff" />
-            <ellipse cx="117" cy="53" rx="20" ry="25" fill="#fff" />
-            <ellipse cx="109" cy="52" rx="6" ry="11" fill="#172344" />
-            <rect x="187" y="49" width="19" height="78" rx="9" fill="#fff" />
-            <ellipse cx="202" cy="53" rx="20" ry="25" fill="#fff" />
-            <ellipse cx="210" cy="52" rx="6" ry="11" fill="#172344" />
-          </g>
-        ) : kind === 'watch' ? (
-          <g transform="rotate(18 160 120)">
-            <rect x="137" y="15" width="50" height="210" rx="18" fill="#2549eb" />
-            <rect x="110" y="69" width="102" height="108" rx="28" fill="#172344" />
-            <rect x="118" y="77" width="86" height="92" rx="22" fill="#273757" />
-            <circle cx="161" cy="123" r="30" stroke="#ff775e" strokeWidth="9" />
-            <path d="M161 99V123L181 132" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
-          </g>
-        ) : (
-          <g>
-            <path d="M123 35L165 28L176 191L115 202Z" fill="#172344" />
-            <path d="M123 35Q96 103 112 202L141 190Q126 101 148 30Z" fill={`url(#${id})`} />
-            <path d="M165 28Q192 106 182 195L163 191Q174 104 153 30Z" fill="#fff" />
-            <path d="M174 69L179 159" stroke="#2549eb" strokeWidth="2" />
-            <path
-              d="M187 157Q197 148 219 158L239 180Q247 203 232 201L216 188H194L181 203Q167 204 173 184Z"
-              fill={`url(#${id})`}
-            />
-            <path d="M190 169V181M184 175H196" stroke="#172344" strokeWidth="3" />
-            <circle cx="222" cy="172" r="3" fill="#2549eb" />
-            <circle cx="231" cy="180" r="3" fill="#ff775e" />
-          </g>
-        )}
-      </svg>
+    <div className={`product-art product-photo ${large ? 'large' : ''}`}>
+      {src && failed !== src ? (
+        <img
+          src={src}
+          alt={product?.name ?? 'Produto'}
+          loading={large ? 'eager' : 'lazy'}
+          decoding="async"
+          width={640}
+          height={480}
+          onError={() => setFailed(src)}
+        />
+      ) : (
+        <span className="photo-unavailable">Foto em atualização</span>
+      )}
     </div>
   );
 }
@@ -466,7 +409,13 @@ export function Catalogue() {
           <div className="hero-sticker">
             <Users size={18} /> A união faz a oferta
           </div>
-          <ProductArt large />
+          <ProductPhoto
+            large
+            product={{
+              name: 'PlayStation 5 Slim',
+              imageUrl: '/assets/products/playstation-5-slim.webp',
+            }}
+          />
           <div className="hero-demand">
             <div>
               <span className="live-dot" />
@@ -541,7 +490,7 @@ export function Catalogue() {
             {products.map((p) => (
               <Link className="product-card" key={p.id} href={`/p/${p.slug}`}>
                 <div className="card-visual">
-                  <ProductArt kind={p.illustration} />
+                  <ProductPhoto product={p} />
                   <span className="heart">
                     <Heart size={18} />
                   </span>
@@ -677,7 +626,7 @@ export function ProductDetails({ slug, initial }: { slug: string; initial?: Prod
         Explorar produtos
       </Link>
       <div className="detail-grid">
-        <ProductArt kind={p.illustration} large />
+        <ProductPhoto product={p} large />
         <div className="detail-copy">
           <span className="demo-badge">{p.category} · Demonstração</span>
           <h1>{p.name}</h1>
@@ -853,7 +802,7 @@ export function MyProducts() {
         ) : (
           data?.items.map((i) => (
             <div key={i.id} className="list-row">
-              <ProductArt kind={i.variant.product.illustration} />
+              <ProductPhoto product={i.variant.product} />
               <div>
                 <Link href={`/p/${i.variant.product.slug}`}>
                   <h3>{i.variant.product.name}</h3>
@@ -950,7 +899,7 @@ export function OfferDetails({ id }: { id: string }) {
       <Feedback error={error || failure} />
       {data && (
         <>
-          <ProductArt kind={data.variant?.product.illustration} />
+          <ProductPhoto product={data.variant?.product} />
           <h2>{brl(data.priceCents)}</h2>
           <p>
             {data.merchant.name} · Até {new Date(data.endsAt).toLocaleString('pt-BR')}
@@ -1065,7 +1014,11 @@ export function ResetPassword() {
           try {
             await api.request('/auth/reset', 'POST', {
               token: new URLSearchParams(window.location.search).get('token'),
-              password: data.get('password'),
+              password: (() => {
+                const parsed = passwordSchema.safeParse(data.get('password'));
+                if (!parsed.success) throw new Error('Use uma senha entre 12 e 128 caracteres.');
+                return parsed.data;
+              })(),
             });
             setNotice('Senha alterada. Entre novamente com sua nova senha.');
           } catch (e) {
@@ -1073,17 +1026,7 @@ export function ResetPassword() {
           }
         }}
       >
-        <label>
-          Nova senha
-          <input
-            name="password"
-            aria-label="Senha"
-            type="password"
-            minLength={12}
-            required
-            autoComplete="new-password"
-          />
-        </label>
+        <PasswordField creation label="Nova senha" />
         <button className="button">Salvar nova senha</button>
       </form>
       <Feedback error={error} notice={notice} />

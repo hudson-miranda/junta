@@ -25,6 +25,7 @@ export type Product = {
   description: string;
   category: string;
   illustration: string;
+  imageUrl?: string | null;
   variants: Variant[];
 };
 export type Variant = {
@@ -161,8 +162,16 @@ export class ApiClient {
   async signup(input: SignupInput) {
     return this.accept(await this.request<Session>('/auth/signup', 'POST', input));
   }
-  async oauth(provider: 'google' | 'apple', idToken: string) {
-    return this.accept(await this.request<Session>(`/auth/oauth/${provider}`, 'POST', { idToken }));
+  async oauth(provider: 'google' | 'apple' | 'facebook', idToken: string, nonce?: string) {
+    return this.accept(
+      await this.request<Session>(
+        `/auth/oauth/${provider}`,
+        'POST',
+        provider === 'facebook'
+          ? { accessToken: idToken, ...(nonce ? { nonce } : {}) }
+          : { idToken },
+      ),
+    );
   }
   restore() {
     if (!this.refreshPromise)

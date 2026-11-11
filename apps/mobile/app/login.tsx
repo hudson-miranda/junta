@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { api, useSession, getReferral } from '../src/session';
+import { password as passwordSchema } from '@junta/validation';
+import { PasswordField } from '../src/password';
 import { SocialLogin } from '../src/social';
 import { Page, Title, Copy, Button, Field, ErrorNotice, Success } from '../src/ui';
 export default function Login() {
@@ -16,6 +18,8 @@ export default function Login() {
     setBusy(true);
     setError('');
     try {
+      if (signup && !passwordSchema.safeParse(password).success)
+        throw new Error('Use uma senha entre 12 e 128 caracteres.');
       accept(
         signup
           ? await api.signup({ name, email, password, referralCode: await getReferral() })
@@ -41,14 +45,7 @@ export default function Login() {
         keyboardType="email-address"
         autoComplete="email"
       />
-      <Field
-        label="Senha"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoComplete={signup ? 'new-password' : 'current-password'}
-      />
-      {signup && <Copy>Use pelo menos 12 caracteres.</Copy>}
+      <PasswordField value={password} onChangeText={setPassword} creation={signup} />
       <ErrorNotice error={error} />
       {notice && <Success>{notice}</Success>}
       <Button disabled={busy} onPress={() => void submit()}>

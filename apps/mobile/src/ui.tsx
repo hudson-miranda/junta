@@ -1,5 +1,6 @@
 import {
   ScrollView,
+  Image,
   View,
   Text,
   Pressable,
@@ -11,7 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, router } from 'expo-router';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import type { Product } from '@junta/api-client';
+import brandLogo from '../assets/junta-logo.png';
 export const colors = {
   blue: '#2549eb',
   ink: '#172344',
@@ -24,8 +27,13 @@ export function Page({ children, tabs = true }: { children: ReactNode; tabs?: bo
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.header}>
-        <Link href="/" style={s.logo}>
-          junta.
+        <Link href="/" asChild>
+          <Pressable
+            accessibilityLabel="JUNTA início"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+          >
+            <Image source={brandLogo} style={{ width: 126, height: 41 }} resizeMode="contain" />
+          </Pressable>
         </Link>
         <Pressable accessibilityLabel="Sua conta" onPress={() => router.push('/settings')}>
           <Text style={s.headerLink}>Sua conta</Text>
@@ -117,18 +125,27 @@ export function Success({ children }: { children: ReactNode }) {
     </View>
   );
 }
-export function ProductGlyph({ kind }: { kind?: string }) {
-  const icons: Record<string, string> = {
-    console: '🎮',
-    phone: '📱',
-    laptop: '💻',
-    tv: '📺',
-    audio: '🎧',
-    watch: '⌚',
-  };
+export function ProductPhoto({ product }: { product?: Pick<Product, 'name' | 'imageUrl'> }) {
+  const [failed, setFailed] = useState<string | null>(null);
+  const path = product?.imageUrl;
+  const uri = path?.startsWith('/assets/products/')
+    ? `${process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000'}${path}`
+    : path?.startsWith('https://')
+      ? path
+      : undefined;
   return (
-    <View style={s.art}>
-      <Text style={{ fontSize: 72 }}>{icons[kind ?? 'console'] ?? '🛍️'}</Text>
+    <View style={[s.art, { backgroundColor: '#fff' }]}>
+      {uri && failed !== uri ? (
+        <Image
+          source={{ uri }}
+          accessibilityLabel={product?.name}
+          resizeMode="contain"
+          style={{ width: '100%', height: '100%' }}
+          onError={() => setFailed(uri)}
+        />
+      ) : (
+        <Text style={{ color: colors.muted }}>Foto em atualização</Text>
+      )}
     </View>
   );
 }

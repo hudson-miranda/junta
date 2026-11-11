@@ -56,11 +56,13 @@ export async function seed(client = db) {
         description: `Junte sua intenção de compra para ${name} e acompanhe ofertas. Produto e preço demonstrativos; não representam cotação de mercado.`,
         category,
         illustration,
+        imageUrl: `/assets/products/${slug}.webp`,
         variants: {
           create: { id: `${slug}-default`, name: variantName, demoPrice: (cents / 100).toFixed(2) },
         },
       },
     });
+    await client.product.updateMany({ where: { slug, imageUrl: null }, data: { imageUrl: `/assets/products/${slug}.webp` } });
   }
   for (const [key, value] of [
     ['minimumAppVersion', '0.1.0'],

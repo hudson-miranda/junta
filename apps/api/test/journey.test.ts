@@ -1,6 +1,7 @@
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { createHmac, randomUUID } from 'node:crypto';
 import { PrismaClient } from '../generated/client';
 import { createApp } from '../src/app';
@@ -42,6 +43,57 @@ async function request(path: string, method = 'GET', body?: unknown, token?: str
     headers: response.headers,
   };
 }
+test('real catalogue photos allow cross-origin display and upgrade preserves custom photos', async () => {
+  const photo = await fetch(`${base}/assets/products/playstation-5-slim.webp`);
+  assert.equal(photo.status, 200);
+  assert.equal(photo.headers.get('cross-origin-resource-policy'), 'cross-origin');
+  assert.equal(photo.headers.get('access-control-allow-origin'), '*');
+  assert.match(photo.headers.get('content-type') ?? '', /image\/webp/);
+  assert.ok((await photo.arrayBuffer()).byteLength > 10000);
+  await db.product.update({ where: { slug: 'airpods' }, data: { imageUrl: null } });
+  await db.product.update({
+    where: { slug: 'apple-watch' },
+    data: { imageUrl: 'https://example.com/custom-photo.jpg' },
+  });
+  await db.$executeRawUnsafe(
+    readFileSync('prisma/migrations/20261110193000_catalogue_photo_backfill/migration.sql', 'utf8'),
+  );
+  assert.equal(
+    (await db.product.findUniqueOrThrow({ where: { slug: 'airpods' } })).imageUrl,
+    '/assets/products/airpods.webp',
+  );
+  assert.equal(
+    (await db.product.findUniqueOrThrow({ where: { slug: 'apple-watch' } })).imageUrl,
+    'https://example.com/custom-photo.jpg',
+  );
+});
+test('Limited Login challenge is short-lived, random and consumed only once', async () => {
+  const original = { id: process.env.FACEBOOK_APP_ID, secret: process.env.FACEBOOK_APP_SECRET };
+  process.env.FACEBOOK_APP_ID = 'test-app';
+  process.env.FACEBOOK_APP_SECRET = 'test-secret';
+  try {
+    const a = await fetch(`${base}/auth/oauth/facebook/challenge`, { method: 'POST' });
+    const { nonce } = (await a.json()) as { nonce: string };
+    assert.match(nonce, /^[\w-]{43}$/);
+    const first = await request('/auth/oauth/facebook', 'POST', {
+      accessToken: 'invalid.signed.token',
+      nonce,
+    });
+    assert.equal(first.status, 401);
+    assert.equal(first.body.message, 'Identidade inválida');
+    const replay = await request('/auth/oauth/facebook', 'POST', {
+      accessToken: 'invalid.signed.token',
+      nonce,
+    });
+    assert.equal(replay.status, 401);
+    assert.match(replay.body.message, /expirada/);
+  } finally {
+    if (original.id === undefined) delete process.env.FACEBOOK_APP_ID;
+    else process.env.FACEBOOK_APP_ID = original.id;
+    if (original.secret === undefined) delete process.env.FACEBOOK_APP_SECRET;
+    else process.env.FACEBOOK_APP_SECRET = original.secret;
+  }
+});
 before(async () => {
   const url = process.env.TEST_DATABASE_URL;
   if (!url || !new URL(url).pathname.endsWith('/junta_test'))

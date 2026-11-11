@@ -19,6 +19,11 @@ services:
       MAIL_PORT: 1025
       PUSH_ENABLED: 'false'
       ENABLE_API_DOCS: 'true'
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
+      FACEBOOK_GRAPH_VERSION: ${FACEBOOK_GRAPH_VERSION:-v25.0}
     ports: ['127.0.0.1:4000:4000']
     depends_on:
       postgres: { condition: service_healthy }

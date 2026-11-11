@@ -84,6 +84,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/auth/oauth/facebook/challenge': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Routes_facebookChallenge'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/providers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Routes_providers'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/auth/refresh': {
     parameters: {
       query?: never;
@@ -615,6 +647,40 @@ export interface operations {
       };
     };
   };
+  Routes_facebookChallenge: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  Routes_providers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   Routes_refresh: {
     parameters: {
       query?: never;
@@ -1081,6 +1147,7 @@ export interface operations {
            * @enum {string}
            */
           illustration: 'console' | 'phone' | 'laptop' | 'tv' | 'audio' | 'watch';
+          imageUrl?: string;
           variantName: string;
           demoPriceCents: number;
         };
@@ -1113,6 +1180,7 @@ export interface operations {
            * @enum {string}
            */
           illustration: 'console' | 'phone' | 'laptop' | 'tv' | 'audio' | 'watch';
+          imageUrl?: string;
           variantName: string;
           demoPriceCents: number;
         };

@@ -145,6 +145,40 @@
         "tags": ["JUNTA"]
       }
     },
+    "/auth/oauth/facebook/challenge": {
+      "post": {
+        "operationId": "Routes_facebookChallenge",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["JUNTA"]
+      }
+    },
+    "/auth/providers": {
+      "get": {
+        "operationId": "Routes_providers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["JUNTA"]
+      }
+    },
     "/auth/refresh": {
       "post": {
         "operationId": "Routes_refresh",
@@ -669,6 +703,10 @@
                     "type": "string",
                     "enum": ["console", "phone", "laptop", "tv", "audio", "watch"]
                   },
+                  "imageUrl": {
+                    "type": "string",
+                    "maxLength": 2048
+                  },
                   "variantName": {
                     "type": "string",
                     "minLength": 2,
@@ -737,6 +775,10 @@
                     "default": "console",
                     "type": "string",
                     "enum": ["console", "phone", "laptop", "tv", "audio", "watch"]
+                  },
+                  "imageUrl": {
+                    "type": "string",
+                    "maxLength": 2048
                   },
                   "variantName": {
                     "type": "string",

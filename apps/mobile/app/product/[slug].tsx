@@ -11,7 +11,7 @@ import {
   Button,
   Field,
   Card,
-  ProductGlyph,
+  ProductPhoto,
   ErrorNotice,
   Success,
   s,
@@ -63,7 +63,7 @@ export default function ProductPage() {
   }
   return (
     <Page>
-      <ProductGlyph kind={data.illustration} />
+      <ProductPhoto product={data} />
       <Text style={s.chipText}>{data.category} · Demonstração</Text>
       <Title>{data.name}</Title>
       <Copy>{data.description}</Copy>

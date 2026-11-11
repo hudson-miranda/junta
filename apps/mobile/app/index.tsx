@@ -3,7 +3,7 @@ import { View, Text, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { brl, type Product } from '@junta/api-client';
 import { useRemote, useSession } from '../src/session';
-import { Page, Title, Copy, Button, Field, Card, ProductGlyph, ErrorNotice, s } from '../src/ui';
+import { Page, Title, Copy, Button, Field, Card, ProductPhoto, ErrorNotice, s } from '../src/ui';
 export default function Home() {
   const { user, ready } = useSession(),
     [onboarded, setOnboarded] = useState(false),
@@ -49,7 +49,7 @@ export default function Home() {
           onPress={() => router.push({ pathname: '/product/[slug]', params: { slug: p.slug } })}
         >
           <Card>
-            <ProductGlyph kind={p.illustration} />
+            <ProductPhoto product={p} />
             <Text style={s.productTitle}>{p.name}</Text>
             <Copy>{p.variants[0]?.name}</Copy>
             <View style={s.row}>

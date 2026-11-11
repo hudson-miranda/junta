@@ -2,7 +2,7 @@ import { Text } from 'react-native';
 import { router } from 'expo-router';
 import { brl, type Intent } from '@junta/api-client';
 import { api, useRemote, useSession } from '../src/session';
-import { Page, Title, Copy, Button, Card, ErrorNotice, ProductGlyph, s } from '../src/ui';
+import { Page, Title, Copy, Button, Card, ErrorNotice, ProductPhoto, s } from '../src/ui';
 export default function MyProducts() {
   const { user } = useSession(),
     { data, error, reload } = useRemote<{ items: Intent[] }>('/intents');
@@ -17,7 +17,7 @@ export default function MyProducts() {
           <ErrorNotice error={error} retry={reload} />
           {data?.items.map((i) => (
             <Card key={i.id}>
-              <ProductGlyph kind={i.variant.product.illustration} />
+              <ProductPhoto product={i.variant.product} />
               <Text style={s.productTitle}>{i.variant.product.name}</Text>
               <Copy>Seu preço-alvo: {brl(i.targetCents)}</Copy>
               <Button

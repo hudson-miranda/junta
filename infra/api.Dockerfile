@@ -23,6 +23,7 @@ COPY --from=build --chown=node:node /release ./
 COPY --from=build --chown=node:node /app/apps/api/dist ./dist
 COPY --from=build --chown=node:node /app/apps/api/generated ./generated
 COPY --from=build --chown=node:node /app/apps/api/prisma ./prisma
+COPY --from=build --chown=node:node /app/apps/api/public ./public
 USER node
 EXPOSE 4000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s CMD node -e "fetch('http://localhost:4000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

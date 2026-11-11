@@ -281,6 +281,7 @@ export class PlatformService {
           description: input.description,
           category: input.category,
           illustration: input.illustration,
+          imageUrl: input.imageUrl,
         };
         const product = id
           ? await tx.product.update({ where: { id }, data })

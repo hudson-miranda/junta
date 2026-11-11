@@ -1,9 +1,13 @@
 import 'reflect-metadata';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, randomBytes } from 'node:crypto';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { resolve } from 'node:path';
 import {
   ArgumentsHost,
   BadRequestException,
+  ServiceUnavailableException,
+  UnauthorizedException,
   Body,
   Catch,
   Controller,
@@ -38,7 +42,7 @@ import {
   email,
   password,
 } from '@junta/validation';
-import { AuthService, publicUser } from './auth';
+import { AuthService, publicUser, digest } from './auth';
 import { PlatformService } from './platform';
 import { config } from './config';
 import { captureError } from './observability';
@@ -154,12 +158,45 @@ export async function createApp(options: { db?: PrismaClient; logging?: boolean 
       @Res({ passthrough: true }) res: Response,
       @Req() req: Request,
     ) {
-      const input = z.object({ idToken: z.string().min(1).max(10000) }).parse(body);
-      return sessionResponse(
-        await auth.oauth(z.enum(['google', 'apple']).parse(provider), input.idToken),
-        res,
-        req,
-      );
+      const selected = z.enum(['google', 'apple', 'facebook']).parse(provider);
+      const input =
+        selected === 'facebook'
+          ? z
+              .object({
+                accessToken: z.string().min(1).max(10000),
+                nonce: z
+                  .string()
+                  .regex(/^[\w-]{43}$/)
+                  .optional(),
+              })
+              .transform((v) => ({ idToken: v.accessToken, nonce: v.nonce }))
+              .parse(body)
+          : z.object({ idToken: z.string().min(1).max(10000), nonce: z.undefined() }).parse(body);
+      if (selected === 'facebook' && input.idToken.split('.').length === 3) {
+        if (
+          !input.nonce ||
+          (await redis.getdel(`junta:facebook:nonce:${digest(input.nonce)}`)) !== '1'
+        )
+          throw new UnauthorizedException('Tentativa de login expirada. Tente novamente.');
+      }
+      return sessionResponse(await auth.oauth(selected, input.idToken, input.nonce), res, req);
+    }
+    @Post('auth/oauth/facebook/challenge')
+    @HttpCode(200)
+    async facebookChallenge() {
+      if (!process.env.FACEBOOK_APP_ID || !process.env.FACEBOOK_APP_SECRET)
+        throw new ServiceUnavailableException('Login com Facebook indisponível neste ambiente');
+      const nonce = randomBytes(32).toString('base64url');
+      await redis.set(`junta:facebook:nonce:${digest(nonce)}`, '1', 'EX', 300, 'NX');
+      return { nonce };
+    }
+    @Get('auth/providers')
+    providers() {
+      return {
+        google: Boolean(process.env.GOOGLE_CLIENT_ID),
+        apple: Boolean(process.env.APPLE_CLIENT_ID),
+        facebook: Boolean(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET),
+      };
     }
     @Post('auth/refresh')
     @HttpCode(200)
@@ -429,7 +466,7 @@ export async function createApp(options: { db?: PrismaClient; logging?: boolean 
     ],
   })
   class AppModule {}
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: options.logging === false ? false : ['error', 'warn'],
   });
   app.use((req: Request, res: Response, next: NextFunction) => {
@@ -460,6 +497,16 @@ export async function createApp(options: { db?: PrismaClient; logging?: boolean 
     next();
   });
   app.use(helmet());
+  app.useStaticAssets(resolve(__dirname, '../public'), {
+    prefix: '/assets/',
+    maxAge: '7d',
+    index: false,
+    dotfiles: 'deny',
+    setHeaders: (res) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    },
+  });
   app.use(cookieParser());
   app.enableCors({
     origin: settings.origins,

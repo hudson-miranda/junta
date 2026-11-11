@@ -2,7 +2,7 @@
 import { useContext, useState, type FormEvent } from 'react';
 import { Users, ShoppingBag, MousePointerClick, TrendingUp } from 'lucide-react';
 import { brl, type Overview, type Product } from '@junta/api-client';
-import { Auth, api, useRemote, errorText, LoginForm, Feedback } from './index';
+import { Auth, api, useRemote, errorText, LoginForm, Feedback, ProductPhoto } from './index';
 export function Operations({ mode }: { mode: 'admin' | 'merchant' }) {
   const { user, ready } = useContext(Auth),
     { data, error, reload } = useRemote<Overview>(user ? `/${mode}/overview` : null),
@@ -69,6 +69,7 @@ export function Operations({ mode }: { mode: 'admin' | 'merchant' }) {
           description: f.get('description'),
           category: f.get('category'),
           illustration: f.get('illustration'),
+          ...(f.get('imageUrl') ? { imageUrl: f.get('imageUrl') } : {}),
           variantName: f.get('variantName'),
           demoPriceCents: Math.round(Number(f.get('price')) * 100),
         },
@@ -141,8 +142,13 @@ export function Operations({ mode }: { mode: 'admin' | 'merchant' }) {
               {data?.pools.map((p) => (
                 <tr key={p.id}>
                   <td>
-                    {p.variant.product.name}
-                    <small>{p.variant.name}</small>
+                    <div className="ops-product">
+                      <ProductPhoto product={p.variant.product} />
+                      <span>
+                        {p.variant.product.name}
+                        <small>{p.variant.name}</small>
+                      </span>
+                    </div>
                   </td>
                   <td>
                     {p.horizon === 'WEEK'
@@ -241,7 +247,12 @@ export function Operations({ mode }: { mode: 'admin' | 'merchant' }) {
             <tbody>
               {data?.offers.map((o) => (
                 <tr key={o.id}>
-                  <td>{o.variant?.product.name}</td>
+                  <td>
+                    <div className="ops-product">
+                      <ProductPhoto product={o.variant?.product} />
+                      <span>{o.variant?.product.name}</span>
+                    </div>
+                  </td>
                   <td>{o.merchant.name}</td>
                   <td>{brl(o.priceCents)}</td>
                   <td>{new Date(o.endsAt).toLocaleDateString('pt-BR')}</td>
@@ -278,7 +289,10 @@ export function Operations({ mode }: { mode: 'admin' | 'merchant' }) {
                   disabled={!mutate}
                   onClick={() => setEdit(p)}
                 >
-                  {p.name} {mutate && '· Editar'}
+                  <ProductPhoto product={p} />
+                  <span>
+                    {p.name} {mutate && '· Editar'}
+                  </span>
                 </button>
               ))}
             </div>
@@ -322,12 +336,22 @@ export function Operations({ mode }: { mode: 'admin' | 'merchant' }) {
                   />
                 </label>
                 <label>
-                  Ilustração
+                  Tipo do produto
                   <select name="illustration" defaultValue={edit?.illustration ?? 'console'}>
                     {['console', 'phone', 'laptop', 'tv', 'audio', 'watch'].map((v) => (
                       <option key={v}>{v}</option>
                     ))}
                   </select>
+                </label>
+                <label>
+                  Foto do produto (URL HTTPS)
+                  <input
+                    name="imageUrl"
+                    aria-label="Foto do produto"
+                    defaultValue={edit?.imageUrl ?? ''}
+                    placeholder="https://.../foto.webp"
+                  />
+                  <small>Use uma foto fiel ao modelo e à versão cadastrados.</small>
                 </label>
                 <button className="button" disabled={busy}>
                   Salvar produto

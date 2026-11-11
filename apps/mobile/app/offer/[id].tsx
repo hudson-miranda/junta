@@ -3,7 +3,7 @@ import { Text, Linking } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { brl, type Offer } from '@junta/api-client';
 import { api, useRemote, useSession } from '../../src/session';
-import { Page, Title, Copy, Button, ErrorNotice, ProductGlyph, s } from '../../src/ui';
+import { Page, Title, Copy, Button, ErrorNotice, ProductPhoto, s } from '../../src/ui';
 export default function OfferPage() {
   const { id } = useLocalSearchParams<{ id: string }>(),
     { user } = useSession(),
@@ -15,7 +15,7 @@ export default function OfferPage() {
       <ErrorNotice error={error || failure} retry={reload} />
       {data && (
         <>
-          <ProductGlyph kind={data.variant?.product.illustration} />
+          <ProductPhoto product={data.variant?.product} />
           <Text style={s.price}>{brl(data.priceCents)}</Text>
           <Copy>{data.merchant.name}</Copy>
           <Copy>Até {new Date(data.endsAt).toLocaleString('pt-BR')}</Copy>

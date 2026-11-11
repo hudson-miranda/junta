@@ -1,5 +1,11 @@
 # Revisão independente do beta
 
+## Revisão da atualização de conta e marca
+
+Revisão independente das alterações sobre `4ef7808`. Quatro problemas corrigidos: CORP dos assets públicos entre origens; backfill de fotos em migration própria sem seed; nonce emitido pelo servidor e consumido atomicamente no Limited Login; exclusão condicional do SDK Facebook do autolinking e importação lazy para não quebrar inicialização Android sem credenciais. O revisor conferiu as três primeiras correções e executou os três testes criptográficos do Facebook. A correção nativa final foi validada localmente pelo resolvedor Expo nos dois estados de configuração e exportação das três plataformas; não houve teste em aparelho.
+
+## Revisão inicial
+
 Revisão somente leitura por agente independente, base `2546093`, implementação até `82fc11e` e alterações locais. Nenhum crítico, quatro achados importantes. A publicação foi retida durante a correção. Não houve nova revisão circular: regressões e a suíte completa verificam o passe final de correção.
 
 ## Corrigidos

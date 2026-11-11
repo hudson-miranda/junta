@@ -12,6 +12,7 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 import nodemailer from 'nodemailer';
 import { SignupInput } from '@junta/validation';
 import { config } from './config';
+import { verifyFacebookIdentity } from './facebook';
 export const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 export const publicUser = (u: User) => ({
   id: u.id,
@@ -70,7 +71,20 @@ export class AuthService {
       throw new UnauthorizedException('Email ou senha inválidos');
     return this.session(user);
   }
-  async oauth(provider: 'google' | 'apple', idToken: string) {
+  async oauth(provider: 'google' | 'apple' | 'facebook', idToken: string, nonce?: string) {
+    if (provider === 'facebook') {
+      const identity = await verifyFacebookIdentity(
+        idToken,
+        {
+          appId: process.env.FACEBOOK_APP_ID ?? '',
+          appSecret: process.env.FACEBOOK_APP_SECRET ?? '',
+          version: process.env.FACEBOOK_GRAPH_VERSION ?? 'v25.0',
+        },
+        fetch,
+        nonce,
+      );
+      return this.socialSession(provider, identity);
+    }
     const audience = process.env[provider === 'google' ? 'GOOGLE_CLIENT_ID' : 'APPLE_CLIENT_ID'];
     if (!audience)
       throw new ServiceUnavailableException('Login social indisponível neste ambiente');
@@ -93,6 +107,16 @@ export class AuthService {
       !payload.sub
     )
       throw new UnauthorizedException('Email não verificado');
+    return this.socialSession(provider, {
+      sub: payload.sub,
+      email: payload.email,
+      name: typeof payload.name === 'string' ? payload.name : 'Pessoa JUNTA',
+    });
+  }
+  private async socialSession(
+    provider: string,
+    payload: { sub: string; email: string; name: string },
+  ) {
     const subject = `${provider}:${payload.sub}`;
     let user = await this.db.user.findUnique({ where: { providerSubject: subject } });
     if (!user) {

@@ -1,5 +1,14 @@
 # Worklog
 
+## 2026-11-10 — conta, fotos e identidade
+
+- Cadastro web/admin/lojista e mobile com força estimada da senha, barra acessível, dica contextual, contador, requisito de 12 caracteres e mostrar/ocultar. Validação inline substitui o aviso nativo de comprimento. Recuperação web usa o mesmo componente.
+- Google/Apple apresentados junto ao novo Facebook; API verifica tokens clássicos e Limited Login, assinatura/audiência/emissor/expiração, ID do perfil e nonce de uso único no Redis. SDK Facebook opcional no build nativo e carregado somente no fluxo configurado. Credenciais reais continuam externas: botões indisponíveis são identificados sem simular login.
+- Nove fotos reais WebP/JPEG servidas pela API e aplicadas na web, admin, lojista, app e compartilhamento. Campo imageUrl, edição no admin, migration aditiva e backfill separado preservam fotos personalizadas e dispensam seed de desenvolvimento em upgrades. Fontes em PRODUCT_IMAGES.md.
+- Logo original com dois traços de J e wordmark Outfit convertido em curvas; SVGs e ícones/splash mobile regenerados. Assinatura não depende de fonte remota.
+- Revisão independente corrigiu política de imagens entre origens, backfill de banco existente, replay de Limited Login e inicialização Android sem credenciais. Autolinking comprovado: SDK ausente sem configuração, presente com fixture, em Android/iOS.
+- Verificação: 35 testes de contratos/cliente/API e 11 testes Playwright; lint, TypeScript, builds Next e export Expo. Expo Doctor 20/20. Fotos decodificadas em navegador entre origens distintas. Login real nos provedores e APK/IPA ainda dependem das contas externas.
+
 ## 2026-11-10 — auditoria inicial
 
 - Pasta local vazia, remoto público vazio, sem histórico, código, migrations ou arquivos locais a preservar.

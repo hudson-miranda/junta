@@ -62,6 +62,7 @@ model Product {
   description String
   category String
   illustration String @default("console")
+  imageUrl String?
   active Boolean @default(true)
   createdAt DateTime @default(now())
   variants ProductVariant[]

@@ -2,6 +2,16 @@
 
 Data: 2026-11-10, America/Sao_Paulo. Repositório originalmente vazio; implementação entregue em `codex/junta-foundation`, com PR para `main`. A entrega comprovada é um beta executável local e em staging.
 
+## Atualização de conta e identidade
+
+- Força da senha com barra acessível, texto, dicas, contador e mostrar/ocultar no cadastro dos três portais e mobile. A validação de comprimento agora é inline; a regra mínima permanece em 12 caracteres.
+- Google/Apple/Facebook apresentados e conectados a adaptadores reais. Facebook clássico e Limited Login verificam identidade antes de criar sessão; no iOS, desafio aleatório do servidor com validade de cinco minutos e consumo único no Redis impede reutilização. SDK nativo é opcional até haver configuração. Login externo ainda aguarda credenciais, configuração dos provedores e domínios: [guia](SOCIAL_LOGIN.md).
+- Nove fotos reais locais no catálogo, detalhes, meus produtos, operação e compartilhamento; imagens mobile usam a mesma API. Campo editável no admin e migration de backfill que preserva URLs personalizadas. [Fontes](PRODUCT_IMAGES.md).
+- Nova [logo vetorial](../assets/brand/junta-logo.svg) com símbolo original de união em J e wordmark em curvas, replicada nos três portais e mobile; favicons e ícones regenerados.
+- Validação desta atualização: 35 testes de contratos/cliente/API + 11 Playwright = **46**, lint e TypeScript sem erros, builds Next e export Android/iOS/web, Expo Doctor 20/20, Docker com quatro migrations. Fotos decodificadas em navegador entre origens distintas e telas revisadas em desktop/mobile. APK/IPA e autenticação real nos provedores continuam sem comprovação externa.
+
+As evidências e URLs abaixo da entrega inicial são históricas; os previews desta atualização são registrados no worklog após a publicação.
+
 ## Arquitetura
 
 Monorepo pnpm/Turborepo/TypeScript. NestJS modular, PostgreSQL/Prisma, Redis/BullMQ, três Next.js e Expo Router. Contratos de entrada gerados do OpenAPI real. [Arquitetura](ARCHITECTURE.md), [revisão independente e decisões](REVIEW.md), [operação](DEPLOYMENT.md).
